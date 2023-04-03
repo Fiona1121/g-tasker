@@ -1,34 +1,45 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import './App.css'
+import React, { createContext, useReducer } from "react";
+
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import Home from "./containers/Home";
+import Login from "./containers/Login";
+
+import CssBaseline from "@mui/material/CssBaseline";
+import { ThemeProvider } from "@mui/material";
+import Theme from "./theme/theme";
+
+import { AuthState, initialState, reducer } from "./store";
+export const AuthContext = createContext<{ state: AuthState; dispatch: React.Dispatch<any> }>({
+	state: initialState,
+	dispatch: () => null,
+});
+
+const router = createBrowserRouter([
+	{
+		path: "/",
+		element: <Home />,
+	},
+	{
+		path: "/login",
+		element: <Login />,
+	},
+]);
 
 function App() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <div className="App">
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </div>
-  )
+	const [state, dispatch] = useReducer(reducer, initialState);
+	return (
+		<ThemeProvider theme={Theme}>
+			<CssBaseline />
+			<AuthContext.Provider
+				value={{
+					state,
+					dispatch,
+				}}
+			>
+				<RouterProvider router={router} />
+			</AuthContext.Provider>
+		</ThemeProvider>
+	);
 }
 
-export default App
+export default App;
