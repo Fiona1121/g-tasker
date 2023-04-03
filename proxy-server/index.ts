@@ -4,6 +4,8 @@ import path from "path";
 import dotenv from "dotenv";
 import axios from "axios";
 import bodyParser from "body-parser";
+import Logger from "./lib/logger";
+import morganMiddleware from "./config/morganMiddleware";
 
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
@@ -15,6 +17,7 @@ const app = express();
 
 app.use(cors());
 app.use(bodyParser.json());
+app.use(morganMiddleware);
 
 /**
  * @description Get access token from github using one time code
@@ -38,7 +41,7 @@ app.get("/github/getAccessToken", async (req: Request, res: Response) => {
 			res.status(status).json(data);
 		});
 	} catch (error) {
-		console.log(error);
+		Logger.error(error);
 		res.status(500).json({ message: "Internal server error" });
 	}
 });
@@ -50,14 +53,15 @@ app.get("/github/getUserData", async (req: Request, res: Response) => {
 			headers: {
 				Authorization: req.get("Authorization") || "",
 			},
-		}).then(({ data, status }) => data.json());
-		res.status(200).json(data);
+		}).then(({ data, status }) => {
+			res.status(status).json(data);
+		});
 	} catch (error) {
-		console.log(error);
+		Logger.error(error);
 		res.status(500).json({ message: "Internal server error" });
 	}
 });
 
 app.listen(PORT, () => {
-	console.log(`Server running at http://localhost:${PORT}`);
+	Logger.info(`Server running at http://localhost:${PORT}`);
 });
