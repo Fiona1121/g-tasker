@@ -9,29 +9,40 @@ interface GetAccessTokenReqData {
 
 const GithubAPI = {
 	getAccessToken: async (code: string | null) => {
-		try {
-			const data = await fetch(`/api/github/getAccessToken?code=${code}`, {
-				method: "GET",
-			}).then((res) => res.json());
-			return data;
-		} catch (error) {
-			console.log(error);
-		}
-	},
-	getUserData: async (token: string) => {
-		try {
-			const { data, status } = await axios.get("https://api.github.com/user", {
-				headers: {
-					Authorization: `token ${token}`,
-				},
-			});
-			console.log(data, status);
-			if (status === 200) {
-				return data;
+		return fetch(`/api/github/getAccessToken?code=${code}`, {
+			method: "GET",
+		}).then((res) => {
+			if (!res.ok) {
+				throw new Error(res.statusText);
 			}
-		} catch (error) {
-			console.log(error);
-		}
+			return res.json();
+		});
+	},
+	getUserInfo: async (token: string | null) => {
+		return await fetch(`/api/github/getUserInfo`, {
+			method: "GET",
+			headers: {
+				Authorization: `token ${token}`,
+			},
+		}).then((res) => {
+			if (!res.ok) {
+				throw new Error(res.statusText);
+			}
+			return res.json();
+		});
+	},
+	getUserIssues: async (token: string | null, config: any = {}) => {
+		return await fetch(`/api/github/getUserIssues?` + new URLSearchParams(config), {
+			method: "GET",
+			headers: {
+				Authorization: `token ${token}`,
+			},
+		}).then((res) => {
+			if (!res.ok) {
+				throw new Error(res.statusText);
+			}
+			return res.json();
+		});
 	},
 };
 

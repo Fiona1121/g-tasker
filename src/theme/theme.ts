@@ -4,7 +4,7 @@ import { createTheme } from "@mui/material/styles";
 export const Theme = createTheme({
 	palette: palette,
 	typography: {
-		fontFamily: ["Roboto", "Helvetica", "Arial", "sans-serif"].join(","),
+		fontFamily: ["Open Sans", "sans-serif", "Roboto", "Helvetica", "Arial"].join(","),
 	},
 });
 

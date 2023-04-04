@@ -2,16 +2,25 @@ import { useContext, useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { AuthContext } from "../App";
 
+import Alert, { AlertColor } from "@mui/material/Alert";
 import Container from "@mui/material/Container";
+import Slide from "@mui/material/Slide";
+import Snackbar from "@mui/material/Snackbar";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import GithubAPI from "../api/GithubAPI";
 import { ResponseType } from "axios";
+import { toast } from "react-toastify";
 
 export default function Login() {
 	const { state, dispatch } = useContext(AuthContext);
 	const { client_id, redirect_uri } = state;
 
-	const [data, setData] = useState({ errorMessage: "", isLoading: false });
+	const [loading, setLoading] = useState(false);
+	const [alert, setAlert] = useState<{ open: boolean; message: string; type: AlertColor }>({
+		open: false,
+		message: "",
+		type: "success",
+	});
 
 	useEffect(() => {
 		// After requesting Github access, Github redirects back to your app with a code parameter
@@ -20,49 +29,54 @@ export default function Login() {
 		const code = urlParams.get("code");
 
 		// If Github API returns the code parameter
-		if (
-			code &&
-			(localStorage.getItem("access_token") === null || localStorage.getItem("access_token") === undefined)
-		) {
+		if (code) {
 			async function getAccessToken() {
-				setData({ ...data, isLoading: true });
+				setLoading(true);
 				await GithubAPI.getAccessToken(code)
 					.then((res) => {
+						if (res.error) {
+							throw new Error(`${res.error}: ${res.error_description}`);
+						}
 						if (res.access_token) {
-							console.log(res);
 							localStorage.setItem("access_token", res.access_token);
-							localStorage.setItem("scope", res.scope);
-							localStorage.setItem("token_type", res.token_type);
-							setData({ ...data, isLoading: false });
-							dispatch({ type: "LOGIN" });
+							dispatch({ type: "SETSTATE", payload: { access_token: res.access_token } });
+							setLoading(false);
 						} else {
-							setData({
-								...data,
-								errorMessage: "Something went wrong. Please login again!",
-								isLoading: false,
-							});
+							throw new Error("Invalid response from Github API - No access token");
 						}
 					})
 					.catch((err) => {
-						console.log(err);
-						setData({ ...data, errorMessage: "Something went wrong", isLoading: false });
+						console.error(err);
+						setLoading(false);
+						toast.error("Login failed. Please try again! ");
 					});
 			}
 			getAccessToken();
 		}
 	}, []);
 
-	if (state.isLoggedIn) {
+	if (state.access_token) {
 		return <Navigate to="/" />;
 	}
+
 	return (
 		<Container maxWidth="sm">
+			<Snackbar
+				open={alert.open}
+				autoHideDuration={6000}
+				anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+				TransitionComponent={(props) => <Slide {...props} direction="left" />}
+				onClose={() => setAlert({ ...alert, open: false })}
+			>
+				<Alert severity={alert.type} sx={{ width: "100%" }} elevation={6} variant="filled">
+					{alert.message}
+				</Alert>
+			</Snackbar>
 			<div>
 				<h1>Welcome</h1>
 				<span>Super amazing app</span>
-				<span>{data.errorMessage}</span>
 				<div className="login-container">
-					{data.isLoading ? (
+					{loading ? (
 						<div className="loader-container">
 							<div className="loader"></div>
 						</div>
@@ -71,9 +85,6 @@ export default function Login() {
 							<a
 								className="login-link"
 								href={`https://github.com/login/oauth/authorize?scope=repo;user&client_id=${client_id}&redirect_uri=${redirect_uri}`}
-								onClick={() => {
-									setData({ ...data, errorMessage: "" });
-								}}
 							>
 								<GitHubIcon />
 								<span>Login with GitHub</span>

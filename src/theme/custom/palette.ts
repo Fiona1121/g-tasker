@@ -24,11 +24,25 @@ const palette = {
 		main: "#3C4A62",
 		dark: "#353541",
 	},
+	success: {
+		light: "#66bb6a",
+		main: "#4caf50",
+		dark: "#43a047",
+	},
+	info: {
+		light: "#64b5f6",
+		main: "#2196f3",
+		dark: "#1976d2",
+	},
+	warning: {
+		light: "#ffb74d",
+		main: "#ff9800",
+		dark: "#f57c00",
+	},
 	error: {
-		light: "#FC8F8F",
-		main: "#FC4343",
-		dark: "#AE2E2E",
-		mui: "#f44336",
+		light: "#e57373",
+		main: "#f44336",
+		dark: "#d32f2f",
 	},
 	background: {
 		default: "transparent",

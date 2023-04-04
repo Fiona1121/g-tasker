@@ -26,7 +26,7 @@ const useStyles = makeStyles()((theme) => ({
 		color: "#555",
 	},
 	headerSearch: {
-		maxWidth: "500px",
+		maxWidth: "600px",
 		margin: "0 auto",
 	},
 }));
@@ -51,8 +51,9 @@ export default function Header() {
 							<TextField
 								{...params}
 								label="Search"
-								placeholder="Search for issues..."
+								placeholder="Search for tasks..."
 								variant="outlined"
+								size="small"
 							/>
 						)}
 					/>

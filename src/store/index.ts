@@ -1,4 +1,5 @@
 enum AuthActionType {
+	SETSTATE = "SETSTATE",
 	LOGIN = "LOGIN",
 	LOGOUT = "LOGOUT",
 }
@@ -9,7 +10,7 @@ interface AuthAction {
 }
 
 export interface AuthState {
-	isLoggedIn: boolean;
+	access_token: string | null;
 	user: any;
 	client_id: string;
 	client_secret: string;
@@ -18,8 +19,8 @@ export interface AuthState {
 }
 
 export const initialState = {
-	isLoggedIn: localStorage.getItem("isLoggedIn") === "true" || false,
-	user: JSON.parse(localStorage.getItem("user") || "null"),
+	access_token: localStorage.getItem("access_token"),
+	user: null,
 	client_id: import.meta.env.VITE_CLIENT_ID,
 	redirect_uri: import.meta.env.VITE_REDIRECT_URI,
 	client_secret: import.meta.env.VITE_CLIENT_SECRET,
@@ -28,20 +29,23 @@ export const initialState = {
 
 export const reducer = (state: AuthState, action: AuthAction) => {
 	switch (action.type) {
-		case AuthActionType.LOGIN: {
-			localStorage.setItem("isLoggedIn", JSON.stringify(action.payload.isLoggedIn));
-			localStorage.setItem("user", JSON.stringify(action.payload.user));
+		case AuthActionType.SETSTATE: {
 			return {
 				...state,
-				isLoggedIn: action.payload.isLoggedIn,
-				user: action.payload.user,
+				...action.payload,
+			};
+		}
+		case AuthActionType.LOGIN: {
+			return {
+				...state,
+				user: action.payload,
 			};
 		}
 		case AuthActionType.LOGOUT: {
 			localStorage.clear();
 			return {
 				...state,
-				isLoggedIn: false,
+				access_token: null,
 				user: null,
 			};
 		}
