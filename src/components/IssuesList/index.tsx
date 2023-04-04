@@ -23,7 +23,7 @@ import { toast } from "react-toastify";
 
 interface Props {
 	issues: any[];
-	reload: () => void;
+	init: () => void;
 }
 
 const useStyles = makeStyles()((theme) => ({
@@ -43,7 +43,7 @@ const useStyles = makeStyles()((theme) => ({
 	},
 }));
 
-export default function IssueList({ issues, reload }: Props) {
+export default function IssueList({ issues, init }: Props) {
 	const { classes } = useStyles();
 	const { state, dispatch } = useContext(AuthContext);
 	const { repos, access_token } = state;
@@ -99,7 +99,7 @@ export default function IssueList({ issues, reload }: Props) {
 				if (res.status === 201) {
 					toast.success("Successfully created issue");
 					setCreateDialogOpen(false);
-					reload();
+					init();
 				} else if (res.status === 404) {
 					toast.error("Repository not found");
 					setNewRepo({
@@ -143,7 +143,7 @@ export default function IssueList({ issues, reload }: Props) {
 			.then((res) => {
 				if (res.status === 200) {
 					toast.success("Issue updated successfully!");
-					reload();
+					init();
 				} else if (res.status === 403) {
 					toast.error("You don't have permission to edit this issue");
 				} else {
@@ -182,7 +182,7 @@ export default function IssueList({ issues, reload }: Props) {
 					</Button>
 				</Box>
 				{_.map(issues, (issue) => {
-					return <IssueItem issue={issue} reload={reload} setEditIssue={setEditIssue} />;
+					return <IssueItem issue={issue} init={init} setEditIssue={setEditIssue} />;
 				})}
 			</Container>
 			<Dialog open={createDialogOpen} onClose={cancelCreate} fullWidth maxWidth="md">

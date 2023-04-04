@@ -2,6 +2,7 @@ import { makeStyles } from "tss-react/mui";
 import Autocomplete from "@mui/material/Autocomplete";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import Chip from "@mui/material/Chip";
 import Container from "@mui/material/Container";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
@@ -73,13 +74,27 @@ export default function Header() {
 	const [filterDialogOpen, setFilterDialogOpen] = useState(false);
 
 	const applyFilters = () => {
-		dispatch({ type: "SETSTATE", payload: { filters: filters } });
+		if (filters.status.length === 0) {
+			setFilters({ ...filters, status: ["Open", `"In Progress"`, "Done"] });
+			dispatch({
+				type: "SETSTATE",
+				payload: {
+					filters: {
+						...filters,
+						status: ["Open", `"In Progress"`, "Done"],
+					},
+				},
+			});
+		} else {
+			dispatch({ type: "SETSTATE", payload: { filters: filters } });
+		}
 		setFilterDialogOpen(false);
 	};
 
 	const resetFilters = () => {
 		setFilters({
-			status: "all",
+			...filters,
+			status: ["Open", `"In Progress"`, "Done"],
 			sort: "created",
 		});
 	};
@@ -89,32 +104,16 @@ export default function Header() {
 		setFilterDialogOpen(false);
 	};
 
-	const searchIssues = async () => {
-		dispatch({ type: "SETSTATE", payload: { loading: true } });
-		await fetch(
-			`https://api.github.com/search/issues?` +
-				new URLSearchParams({
-					q: `label:Open,"In Progress",Done user:${state.user.login} in:title,body state:open ${searchContent}`,
-					sort: state.filters.sort,
-					order: "desc",
-					per_page: "10",
-					page: "1",
-				}),
-
-			{
-				method: "GET",
-				headers: {
-					Authorization: `token ${state.access_token}`,
+	const handleSearch = () => {
+		dispatch({
+			type: "SETSTATE",
+			payload: {
+				filters: {
+					...filters,
+					searchContent,
 				},
-			}
-		).then((res) => {
-			if (res.status === 200) {
-				res.json().then((data) => {
-					dispatch({ type: "SETSTATE", payload: { issues: data.items } });
-				});
-			}
+			},
 		});
-		dispatch({ type: "SETSTATE", payload: { loading: false } });
 	};
 
 	return (
@@ -140,7 +139,7 @@ export default function Header() {
 							InputProps={{
 								endAdornment: (
 									<InputAdornment position="end">
-										<IconButton onClick={searchIssues}>
+										<IconButton onClick={handleSearch}>
 											<SearchIcon />
 										</IconButton>
 									</InputAdornment>
@@ -168,23 +167,25 @@ export default function Header() {
 				</DialogTitle>
 				<DialogContent>
 					<Grid container spacing={2}>
-						<Grid item xs={12} md={6}>
+						<Grid item xs={12} md={12}>
 							<Typography variant="body2" component="p" style={{ marginTop: "10px" }}>
 								Status
 							</Typography>
 							<Select
-								onChange={(e) => setFilters({ ...filters, status: e.target.value })}
 								value={filters.status}
 								style={{ marginTop: "8px", minWidth: "250px" }}
 								size="small"
-							>
-								<MenuItem value="all">
-									<Box sx={{ display: "flex", alignItems: "center" }}>
-										<Typography variant="body1" component="span">
-											All
-										</Typography>
+								multiple
+								fullWidth
+								onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+								renderValue={(selected) => (
+									<Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+										{selected.map((value: string) => (
+											<Chip key={value} label={value} />
+										))}
 									</Box>
-								</MenuItem>
+								)}
+							>
 								<MenuItem value="Open">
 									<Box sx={{ display: "flex", alignItems: "center" }}>
 										<CircleIcon
@@ -197,7 +198,7 @@ export default function Header() {
 										</Typography>
 									</Box>
 								</MenuItem>
-								<MenuItem value="In Progress">
+								<MenuItem value={`"In Progress"`}>
 									<Box sx={{ display: "flex", alignItems: "center" }}>
 										<CircleIcon
 											color="warning"

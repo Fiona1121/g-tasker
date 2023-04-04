@@ -33,7 +33,8 @@ export const initialState = {
 	repos: [],
 	issues: [],
 	filters: {
-		status: "all",
+		searchContent: "",
+		status: ["Open", `"In Progress"`, "Done"],
 		sort: "created",
 	},
 };

@@ -25,7 +25,7 @@ import { toast } from "react-toastify";
 
 interface Props {
 	issue: any;
-	reload: () => void;
+	init: () => void;
 	setEditIssue: (issue: any) => void;
 }
 
@@ -53,7 +53,7 @@ const useStyles = makeStyles()((theme) => ({
 	},
 }));
 
-export default function IssueItem({ issue, reload, setEditIssue }: Props) {
+export default function IssueItem({ issue, init, setEditIssue }: Props) {
 	const { classes } = useStyles();
 	const { state, dispatch } = useContext(AuthContext);
 
@@ -107,7 +107,7 @@ export default function IssueItem({ issue, reload, setEditIssue }: Props) {
 			.then((res) => {
 				if (res.status === 200) {
 					toast.success("Issue closed successfully!");
-					reload();
+					init();
 				} else if (res.status === 403) {
 					toast.error("You don't have permission to edit this issue");
 				} else {
