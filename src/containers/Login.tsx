@@ -3,6 +3,8 @@ import { Navigate } from "react-router-dom";
 import { AuthContext } from "../App";
 
 import Alert, { AlertColor } from "@mui/material/Alert";
+import Backdrop from "@mui/material/Backdrop";
+import CircularProgress from "@mui/material/CircularProgress";
 import Container from "@mui/material/Container";
 import Slide from "@mui/material/Slide";
 import Snackbar from "@mui/material/Snackbar";
@@ -41,6 +43,7 @@ export default function Login() {
 							localStorage.setItem("access_token", res.access_token);
 							dispatch({ type: "SETSTATE", payload: { access_token: res.access_token } });
 							setLoading(false);
+							toast.success("Login successful! ");
 						} else {
 							throw new Error("Invalid response from Github API - No access token");
 						}
@@ -93,6 +96,9 @@ export default function Login() {
 					)}
 				</div>
 			</div>
+			<Backdrop sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }} open={loading}>
+				<CircularProgress color="inherit" />
+			</Backdrop>
 		</Container>
 	);
 }

@@ -5,6 +5,7 @@ import IssueItem from "./IssueItem";
 
 interface Props {
 	issues: any[];
+	reload: () => void;
 }
 
 const useStyles = makeStyles()((theme) => ({
@@ -15,14 +16,14 @@ const useStyles = makeStyles()((theme) => ({
 	},
 }));
 
-export default function IssueList({ issues }: Props) {
+export default function IssueList({ issues, reload }: Props) {
 	const { classes } = useStyles();
 
 	return (
 		<div className={classes.root}>
 			<Container maxWidth="md">
 				{_.map(issues, (issue) => {
-					return <IssueItem issue={issue} />;
+					return <IssueItem issue={issue} reload={reload} />;
 				})}
 			</Container>
 		</div>

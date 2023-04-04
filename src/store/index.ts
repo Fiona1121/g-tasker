@@ -10,21 +10,25 @@ interface AuthAction {
 }
 
 export interface AuthState {
+	loading: boolean;
 	access_token: string | null;
 	user: any;
 	client_id: string;
 	client_secret: string;
 	redirect_uri: string;
 	proxy_url: string;
+	issues: any[];
 }
 
 export const initialState = {
+	loading: false,
 	access_token: localStorage.getItem("access_token"),
 	user: null,
 	client_id: import.meta.env.VITE_CLIENT_ID,
 	redirect_uri: import.meta.env.VITE_REDIRECT_URI,
 	client_secret: import.meta.env.VITE_CLIENT_SECRET,
 	proxy_url: import.meta.env.VITE_PROXY_URL,
+	issues: [],
 };
 
 export const reducer = (state: AuthState, action: AuthAction) => {
