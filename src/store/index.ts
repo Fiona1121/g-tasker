@@ -19,6 +19,7 @@ export interface AuthState {
 	proxy_url: string;
 	repos: any[];
 	issues: any[];
+	filters: any;
 }
 
 export const initialState = {
@@ -31,6 +32,10 @@ export const initialState = {
 	proxy_url: import.meta.env.VITE_PROXY_URL,
 	repos: [],
 	issues: [],
+	filters: {
+		status: "all",
+		sort: "created",
+	},
 };
 
 export const reducer = (state: AuthState, action: AuthAction) => {
