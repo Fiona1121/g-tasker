@@ -17,6 +17,7 @@ export interface AuthState {
 	client_secret: string;
 	redirect_uri: string;
 	proxy_url: string;
+	repos: any[];
 	issues: any[];
 }
 
@@ -28,6 +29,7 @@ export const initialState = {
 	redirect_uri: import.meta.env.VITE_REDIRECT_URI,
 	client_secret: import.meta.env.VITE_CLIENT_SECRET,
 	proxy_url: import.meta.env.VITE_PROXY_URL,
+	repos: [],
 	issues: [],
 };
 
