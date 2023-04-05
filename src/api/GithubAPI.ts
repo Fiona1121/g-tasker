@@ -35,8 +35,8 @@ const GithubAPI = {
 			body: JSON.stringify(bodyData),
 		});
 	},
-	postIssue: async (token: string | null, repo: string, bodyData: any) => {
-		return fetch(`/github/repos/${repo}/issues`, {
+	postIssue: async (token: string | null, owner: string, repo: string, bodyData: any) => {
+		return fetch(`/github/repos/${owner}/${repo}/issues`, {
 			method: "POST",
 			headers: {
 				Authorization: `token ${token}`,

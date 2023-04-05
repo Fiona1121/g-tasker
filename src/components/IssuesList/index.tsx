@@ -5,11 +5,14 @@ import Container from "@mui/material/Container";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle";
+import Fab from "@mui/material/Fab";
 import Grid from "@mui/material/Grid";
 import InputAdornment from "@mui/material/InputAdornment";
 import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
 import TextField from "@mui/material/TextField";
+import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import AddIcon from "@mui/icons-material/Add";
 
@@ -86,7 +89,7 @@ export default function IssueList({ issues, hasMore, init }: Props) {
 		}
 
 		dispatch({ type: "SETSTATE", payload: { loading: true } });
-		await GithubAPI.postIssue(access_token, newRepo.value, {
+		await GithubAPI.postIssue(access_token, state.user.login, newRepo.value, {
 			title: newTitle.value,
 			body: newBody.value,
 			labels: ["Open"],
@@ -170,13 +173,30 @@ export default function IssueList({ issues, hasMore, init }: Props) {
 	return (
 		<div className={classes.root}>
 			<Container maxWidth="md">
-				<Box style={{ textAlign: "center", marginBottom: "40px" }}>
-					<Button startIcon={<AddIcon />} variant="outlined" onClick={() => setCreateDialogOpen(true)}>
+				<Tooltip
+					title={
 						<Typography variant="body2" component="p">
-							Create New Task
+							Create Task
 						</Typography>
-					</Button>
-				</Box>
+					}
+					aria-label="create task"
+					placement="left"
+				>
+					<Fab
+						color="primary"
+						aria-label="add"
+						sx={{
+							width: (theme) => theme.spacing(8),
+							height: (theme) => theme.spacing(8),
+							position: "fixed",
+							bottom: (theme) => theme.spacing(4),
+							right: (theme) => theme.spacing(4),
+						}}
+						onClick={() => setCreateDialogOpen(true)}
+					>
+						<AddIcon />
+					</Fab>
+				</Tooltip>
 				{_.map(issues, (issue) => {
 					return <IssueItem key={issue.id} issue={issue} init={init} setEditIssue={setEditIssue} />;
 				})}
@@ -192,6 +212,7 @@ export default function IssueList({ issues, hasMore, init }: Props) {
 				)}
 			</Container>
 			<Dialog open={createDialogOpen} onClose={cancelCreate} fullWidth maxWidth="md">
+				<DialogTitle>Create Task</DialogTitle>
 				<DialogContent className={classes.dialogContent}>
 					<Grid container spacing={2}>
 						<Grid item xs={12} md={4}>
@@ -213,6 +234,11 @@ export default function IssueList({ issues, hasMore, init }: Props) {
 										value: e.target.value,
 									})
 								}
+								InputProps={{
+									startAdornment: (
+										<InputAdornment position="start">{state.user.login}/</InputAdornment>
+									),
+								}}
 							/>
 						</Grid>
 						<Grid item xs={12} md={8}>
