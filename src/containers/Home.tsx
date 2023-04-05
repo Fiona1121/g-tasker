@@ -34,7 +34,6 @@ export default function Home() {
 			.catch((err) => {
 				console.error(err);
 				dispatch({ type: "LOGOUT" });
-				toast.error("Invalid access token. Please login again! ");
 			});
 	}
 
