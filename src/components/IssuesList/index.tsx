@@ -236,7 +236,7 @@ export default function IssueList({ issues, hasMore, init }: Props) {
 								}
 								InputProps={{
 									startAdornment: (
-										<InputAdornment position="start">{state.user.login}/</InputAdornment>
+										<InputAdornment position="start">{state.user?.login}/</InputAdornment>
 									),
 								}}
 							/>
