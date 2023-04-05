@@ -13,19 +13,22 @@ export default function Home() {
 	const { state, dispatch } = useContext(AuthContext);
 	const { access_token, user, loading } = state;
 
-	const [page, setPage] = useState(1);
+	const [page, setPage] = useState(0);
 	const [hasMore, setHasMore] = useState(true);
 
 	async function getUserInfo() {
 		return await GithubAPI.getUserInfo(access_token)
 			.then((res) => {
-				if (res.error) {
-					throw new Error(`${res.error}: ${res.error_description}`);
-				}
-				if (res.login) {
-					dispatch({ type: "LOGIN", payload: res });
+				if (res.ok) {
+					res.json().then((data) => {
+						if (data.login) {
+							dispatch({ type: "LOGIN", payload: data });
+						} else {
+							throw new Error("Invalid response from Github API - No user info");
+						}
+					});
 				} else {
-					throw new Error("Invalid response from Github API - No user info");
+					throw new Error("Invalid response from Github API");
 				}
 			})
 			.catch((err) => {
@@ -35,27 +38,17 @@ export default function Home() {
 			});
 	}
 
-	async function fetchIssues() {
-		return await fetch(
-			`https://api.github.com/search/issues?` +
-				new URLSearchParams({
-					q: `label:${state.filters.status.join(",")} user:${state.user.login} in:title,body state:open ${
-						state.filters.searchContent
-					}`,
-					sort: state.filters.sort,
-					order: "desc",
-					per_page: "10",
-					page: page.toString(),
-				}),
-
-			{
-				method: "GET",
-				headers: {
-					Authorization: `token ${state.access_token}`,
-				},
-			}
-		).then((res) => {
-			if (res.status === 200) {
+	async function fetchIssues(page: number = 1) {
+		return await GithubAPI.getIssues(access_token, {
+			q: `label:${state.filters.status.join(",")} user:${state.user?.login} in:title,body state:open ${
+				state.filters.searchContent
+			}`,
+			sort: state.filters.sort,
+			order: "desc",
+			per_page: "10",
+			page: page.toString(),
+		}).then((res) => {
+			if (res.ok) {
 				res.json().then((data) => {
 					const newIssues = page === 1 ? data.items : [...state.issues, ...data.items];
 					setHasMore(data.total_count > newIssues.length);
@@ -70,17 +63,22 @@ export default function Home() {
 		});
 	}
 
-	async function init() {
+	async function initIssues() {
+		// scroll to top
+		window.scrollTo(0, 0);
 		dispatch({ type: "SETSTATE", payload: { loading: true } });
 		setPage(1);
-		await getUserInfo();
 		await fetchIssues();
 		dispatch({ type: "SETSTATE", payload: { loading: false } });
 	}
 
 	useEffect(() => {
-		init();
+		getUserInfo();
 	}, []);
+
+	useEffect(() => {
+		if (user) initIssues();
+	}, [user, state.filters]);
 
 	useEffect(() => {
 		async function handleScroll() {
@@ -91,7 +89,7 @@ export default function Home() {
 				// send API request to load more tasks
 				dispatch({ type: "SETSTATE", payload: { loading: true } });
 				setPage(page + 1);
-				await fetchIssues();
+				await fetchIssues(page + 1);
 				dispatch({ type: "SETSTATE", payload: { loading: false } });
 			}
 		}
@@ -100,16 +98,6 @@ export default function Home() {
 		return () => window.removeEventListener("scroll", handleScroll);
 	}, [hasMore, fetchIssues]);
 
-	useEffect(() => {
-		async function handleFilter() {
-			dispatch({ type: "SETSTATE", payload: { loading: true } });
-			setPage(1);
-			await fetchIssues();
-			dispatch({ type: "SETSTATE", payload: { loading: false } });
-		}
-		handleFilter();
-	}, [state.filters]);
-
 	if (!access_token) {
 		return <Navigate to="/login" />;
 	}
@@ -117,7 +105,7 @@ export default function Home() {
 	return (
 		<>
 			<Header />
-			<IssueList issues={state.issues} init={init} />
+			<IssueList hasMore={hasMore} issues={state.issues} init={initIssues} />
 			<Backdrop sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.modal + 1 }} open={loading}>
 				<CircularProgress color="inherit" />
 			</Backdrop>

@@ -5,10 +5,15 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
 	server: {
 		proxy: {
-			"/api": {
-				target: "http://localhost:5174",
+			"/github/oauth": {
+				target: "https://github.com/login/oauth",
 				changeOrigin: true,
-				rewrite: (path) => path.replace(/^\/api/, ""),
+				rewrite: (path) => path.replace(/^\/github\/oauth/, ""),
+			},
+			"/github": {
+				target: "https://api.github.com",
+				changeOrigin: true,
+				rewrite: (path) => path.replace(/^\/github/, ""),
 			},
 		},
 	},

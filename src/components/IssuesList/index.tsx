@@ -20,9 +20,11 @@ import IssueItem from "./IssueItem";
 import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../../App";
 import { toast } from "react-toastify";
+import GithubAPI from "../../api/GithubAPI";
 
 interface Props {
 	issues: any[];
+	hasMore: boolean;
 	init: () => void;
 }
 
@@ -39,14 +41,14 @@ const useStyles = makeStyles()((theme) => ({
 		paddingBottom: "40px",
 	},
 	dialogActions: {
-		borderTop: "1px solid #ddd",
+		padding: theme.spacing(2),
 	},
 }));
 
-export default function IssueList({ issues, init }: Props) {
+export default function IssueList({ issues, hasMore, init }: Props) {
 	const { classes } = useStyles();
 	const { state, dispatch } = useContext(AuthContext);
-	const { repos, access_token } = state;
+	const { access_token } = state;
 
 	const [createDialogOpen, setCreateDialogOpen] = useState(false);
 	const [newRepo, setNewRepo] = useState({ value: "", error: false, helperText: "" });
@@ -84,22 +86,21 @@ export default function IssueList({ issues, init }: Props) {
 		}
 
 		dispatch({ type: "SETSTATE", payload: { loading: true } });
-		await fetch(`https://api.github.com/repos/${newRepo.value}/issues`, {
-			method: "POST",
-			headers: {
-				Authorization: `token ${access_token}`,
-			},
-			body: JSON.stringify({
-				title: newTitle.value,
-				body: newBody.value,
-				labels: ["Open"],
-			}),
+		await GithubAPI.postIssue(access_token, newRepo.value, {
+			title: newTitle.value,
+			body: newBody.value,
+			labels: ["Open"],
 		})
 			.then((res) => {
-				if (res.status === 201) {
+				if (res.ok) {
 					toast.success("Successfully created issue");
+					setTimeout(() => {
+						init();
+					}, 1000);
+					setNewRepo({ value: "", error: false, helperText: "" });
+					setNewTitle({ value: "", error: false, helperText: "" });
+					setNewBody({ value: "", error: false, helperText: "" });
 					setCreateDialogOpen(false);
-					init();
 				} else if (res.status === 404) {
 					toast.error("Repository not found");
 					setNewRepo({
@@ -128,22 +129,17 @@ export default function IssueList({ issues, init }: Props) {
 
 	const saveEdit = async () => {
 		dispatch({ type: "SETSTATE", payload: { loading: true } });
-		await fetch(editIssue.url, {
-			method: "PATCH",
-			headers: {
-				Authorization: `token ${state.access_token}`,
-				Accept: "application/vnd.github.v3+json",
-			},
-			body: JSON.stringify({
-				title: editTitle,
-				body: editBody,
-				labels: [editStatus],
-			}),
+		await GithubAPI.patchIssue(access_token, editIssue.url, {
+			title: editTitle,
+			body: editBody,
+			labels: [editStatus],
 		})
 			.then((res) => {
-				if (res.status === 200) {
+				if (res.ok) {
 					toast.success("Issue updated successfully!");
-					init();
+					setTimeout(() => {
+						init();
+					}, 1000);
 				} else if (res.status === 403) {
 					toast.error("You don't have permission to edit this issue");
 				} else {
@@ -182,8 +178,18 @@ export default function IssueList({ issues, init }: Props) {
 					</Button>
 				</Box>
 				{_.map(issues, (issue) => {
-					return <IssueItem issue={issue} init={init} setEditIssue={setEditIssue} />;
+					return <IssueItem key={issue.id} issue={issue} init={init} setEditIssue={setEditIssue} />;
 				})}
+				{!state.loading && issues.length > 0 && !hasMore && (
+					<Box style={{ textAlign: "center", marginTop: "40px" }}>
+						<Typography variant="body1" component="p">
+							You've reached the end of the list.
+						</Typography>
+						<Typography variant="caption" component="p">
+							Total Issues: {issues.length}
+						</Typography>
+					</Box>
+				)}
 			</Container>
 			<Dialog open={createDialogOpen} onClose={cancelCreate} fullWidth maxWidth="md">
 				<DialogContent className={classes.dialogContent}>
@@ -268,7 +274,7 @@ export default function IssueList({ issues, init }: Props) {
 						id="title"
 						type="text"
 						fullWidth
-						value={editTitle}
+						value={editTitle ?? ""}
 						onChange={(e) => setEditTitle(e.target.value)}
 						InputProps={{
 							startAdornment: <InputAdornment position="start">#{editIssue?.number}</InputAdornment>,
@@ -284,7 +290,7 @@ export default function IssueList({ issues, init }: Props) {
 						fullWidth
 						multiline
 						rows={10}
-						value={editBody}
+						value={editBody ?? ""}
 						onChange={(e) => setEditBody(e.target.value)}
 					/>
 					<Typography variant="body2" component="p" style={{ marginTop: "10px" }}>

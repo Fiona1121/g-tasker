@@ -1,47 +1,47 @@
-import axios from "axios";
-
-interface GetAccessTokenReqData {
-	client_id: string;
-	client_secret: string;
-	code: string;
-	redirect_uri: string;
-}
-
 const GithubAPI = {
-	getAccessToken: async (code: string | null) => {
-		return fetch(`/api/github/getAccessToken?code=${code}`, {
-			method: "GET",
-		}).then((res) => {
-			if (!res.ok) {
-				throw new Error(res.statusText);
+	getAccessToken: async (client_id: string, client_secret: string, code: string | null) => {
+		return await fetch(
+			`/github/oauth/access_token?client_id=${client_id}&client_secret=${client_secret}&code=${code}`,
+			{
+				method: "GET",
+				headers: {
+					Accept: "application/json",
+				},
 			}
-			return res.json();
-		});
+		);
 	},
 	getUserInfo: async (token: string | null) => {
-		return await fetch(`/api/github/getUserInfo`, {
+		return await fetch(`/github/user`, {
 			method: "GET",
 			headers: {
 				Authorization: `token ${token}`,
 			},
-		}).then((res) => {
-			if (!res.ok) {
-				throw new Error(res.statusText);
-			}
-			return res.json();
 		});
 	},
-	getUserIssues: async (token: string | null, config: any = {}) => {
-		return await fetch(`/api/github/getUserIssues?` + new URLSearchParams(config), {
+	getIssues: async (token: string | null, params: any) => {
+		return await fetch(`/github/search/issues?` + new URLSearchParams(params), {
 			method: "GET",
 			headers: {
 				Authorization: `token ${token}`,
 			},
-		}).then((res) => {
-			if (!res.ok) {
-				throw new Error(res.statusText);
-			}
-			return res.json();
+		});
+	},
+	patchIssue: async (token: string | null, url: string, bodyData: any) => {
+		return await fetch(url, {
+			method: "PATCH",
+			headers: {
+				Authorization: `token ${token}`,
+			},
+			body: JSON.stringify(bodyData),
+		});
+	},
+	postIssue: async (token: string | null, repo: string, bodyData: any) => {
+		return fetch(`/github/repos/${repo}/issues`, {
+			method: "POST",
+			headers: {
+				Authorization: `token ${token}`,
+			},
+			body: JSON.stringify(bodyData),
 		});
 	},
 };

@@ -22,6 +22,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { AuthContext } from "../../App";
 import { toast } from "react-toastify";
+import GithubAPI from "../../api/GithubAPI";
 
 interface Props {
 	issue: any;
@@ -94,20 +95,15 @@ export default function IssueItem({ issue, init, setEditIssue }: Props) {
 	const handleDeleteClick = async () => {
 		setMenuAnchorEl(null);
 		dispatch({ type: "SETSTATE", payload: { loading: true } });
-		await fetch(issue.url, {
-			method: "PATCH",
-			headers: {
-				Authorization: `token ${state.access_token}`,
-				Accept: "application/vnd.github.v3+json",
-			},
-			body: JSON.stringify({
-				state: "closed",
-			}),
+		await GithubAPI.patchIssue(state.access_token, issue.url, {
+			state: "closed",
 		})
 			.then((res) => {
-				if (res.status === 200) {
+				if (res.ok) {
 					toast.success("Issue closed successfully!");
-					init();
+					setTimeout(() => {
+						init();
+					}, 1000);
 				} else if (res.status === 403) {
 					toast.error("You don't have permission to edit this issue");
 				} else {
@@ -119,60 +115,58 @@ export default function IssueItem({ issue, init, setEditIssue }: Props) {
 	};
 
 	return (
-		<>
-			<Card variant="outlined" className={classes.issueWrapper} id={issue.id}>
-				<CardHeader
-					avatar={<Avatar src={issue.user?.avatar_url}></Avatar>}
-					action={
-						<Box>
-							{getLabelChip(status)}
-							<IconButton aria-label="settings" onClick={handleMenuClick}>
-								<MoreVertIcon />
-							</IconButton>
-						</Box>
-					}
-					title={issue.user?.login}
-					subheader={
-						<Typography variant="caption" component="p" style={{ color: "#555" }}>
-							{moment(issue.created_at).format("MMMM D, YYYY")}
-						</Typography>
-					}
-					className={classes.issueHeader}
-				/>
-				<CardContent>
-					<Typography variant="h6" component="h6" className={classes.issueTitle}>
-						<span style={{ color: "#777" }}>
-							{owner}/{repo}
-						</span>{" "}
-						{title}
+		<Card variant="outlined" className={classes.issueWrapper}>
+			<CardHeader
+				avatar={<Avatar src={issue.user?.avatar_url}></Avatar>}
+				action={
+					<Box>
+						{getLabelChip(status)}
+						<IconButton aria-label="settings" onClick={handleMenuClick}>
+							<MoreVertIcon />
+						</IconButton>
+					</Box>
+				}
+				title={issue.user?.login}
+				subheader={
+					<Typography variant="caption" component="p" style={{ color: "#555" }}>
+						{moment(issue.created_at).format("MMMM D, YYYY")}
 					</Typography>
-					<Typography
-						variant="body1"
-						component="p"
-						className={classes.issueSummary}
-						dangerouslySetInnerHTML={{ __html: body }}
-					></Typography>
-				</CardContent>
-				<Menu
-					anchorEl={menuAnchorEl}
-					keepMounted
-					open={Boolean(menuAnchorEl)}
-					onClose={() => setMenuAnchorEl(null)}
-				>
-					<MenuItem onClick={handleEditClick}>
-						<ListItemIcon>
-							<EditIcon fontSize="small" />
-						</ListItemIcon>
-						<ListItemText primary="Edit" />
-					</MenuItem>
-					<MenuItem onClick={handleDeleteClick}>
-						<ListItemIcon>
-							<DeleteIcon fontSize="small" />
-						</ListItemIcon>
-						<ListItemText primary="Delete" />
-					</MenuItem>
-				</Menu>
-			</Card>
-		</>
+				}
+				className={classes.issueHeader}
+			/>
+			<CardContent>
+				<Typography variant="h6" component="h6" className={classes.issueTitle}>
+					<span style={{ color: "#777" }}>
+						{owner}/{repo}
+					</span>{" "}
+					{title}
+				</Typography>
+				<Typography
+					variant="body1"
+					component="p"
+					className={classes.issueSummary}
+					dangerouslySetInnerHTML={{ __html: body }}
+				></Typography>
+			</CardContent>
+			<Menu
+				anchorEl={menuAnchorEl}
+				keepMounted
+				open={Boolean(menuAnchorEl)}
+				onClose={() => setMenuAnchorEl(null)}
+			>
+				<MenuItem onClick={handleEditClick}>
+					<ListItemIcon>
+						<EditIcon fontSize="small" />
+					</ListItemIcon>
+					<ListItemText primary="Edit" />
+				</MenuItem>
+				<MenuItem onClick={handleDeleteClick}>
+					<ListItemIcon>
+						<DeleteIcon fontSize="small" />
+					</ListItemIcon>
+					<ListItemText primary="Delete" />
+				</MenuItem>
+			</Menu>
+		</Card>
 	);
 }

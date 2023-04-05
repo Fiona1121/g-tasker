@@ -10,12 +10,11 @@ import Slide from "@mui/material/Slide";
 import Snackbar from "@mui/material/Snackbar";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import GithubAPI from "../api/GithubAPI";
-import { ResponseType } from "axios";
 import { toast } from "react-toastify";
 
 export default function Login() {
 	const { state, dispatch } = useContext(AuthContext);
-	const { client_id, redirect_uri } = state;
+	const { client_id, client_secret, redirect_uri } = state;
 
 	const [loading, setLoading] = useState(false);
 	const [alert, setAlert] = useState<{ open: boolean; message: string; type: AlertColor }>({
@@ -34,16 +33,21 @@ export default function Login() {
 		if (code) {
 			async function getAccessToken() {
 				setLoading(true);
-				await GithubAPI.getAccessToken(code)
+				await GithubAPI.getAccessToken(client_id, client_secret, code)
 					.then((res) => {
-						if (res.error) {
-							throw new Error(`${res.error}: ${res.error_description}`);
-						}
-						if (res.access_token) {
-							localStorage.setItem("access_token", res.access_token);
-							dispatch({ type: "SETSTATE", payload: { access_token: res.access_token } });
-							setLoading(false);
-							toast.success("Login successful! ");
+						console.log(res);
+						if (res.status === 200) {
+							res.json().then((data) => {
+								console.log(data);
+								if (data.access_token) {
+									localStorage.setItem("access_token", data.access_token);
+									dispatch({ type: "SETSTATE", payload: { access_token: data.access_token } });
+									setLoading(false);
+									toast.success("Login successful! ");
+								} else {
+									throw new Error("Invalid response from Github API - No access token");
+								}
+							});
 						} else {
 							throw new Error("Invalid response from Github API - No access token");
 						}
