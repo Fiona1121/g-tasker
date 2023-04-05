@@ -1,3 +1,7 @@
 {
-	"rewrites": [{ "source": "/(.*)", "destination": "/" }]
+	"rewrites": [
+		{ "source": "/(.*)", "destination": "/" },
+		{ "source": "/github/oauth/:path(.*)", "destination": "https://github.com/login/oauth/:path" },
+		{ "source": "/github/:path(.*)", "destination": "https://api.github.com/:path" }
+	]
 }
