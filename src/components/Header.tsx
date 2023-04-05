@@ -1,5 +1,6 @@
 import { makeStyles } from "tss-react/mui";
-import Autocomplete from "@mui/material/Autocomplete";
+import AppBar from "@mui/material/AppBar";
+import Avatar from "@mui/material/Avatar";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
@@ -8,12 +9,14 @@ import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
+import Drawer from "@mui/material/Drawer";
 import Grid from "@mui/material/Grid";
 import IconButton from "@mui/material/IconButton";
 import InputAdornment from "@mui/material/InputAdornment";
 import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
 import TextField from "@mui/material/TextField";
+import Toolbar from "@mui/material/Toolbar";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
@@ -22,6 +25,7 @@ import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import CloseIcon from "@mui/icons-material/Close";
 import CircleIcon from "@mui/icons-material/Circle";
 import SearchIcon from "@mui/icons-material/Search";
+import MenuIcon from "@mui/icons-material/Menu";
 
 import { useContext, useState } from "react";
 import { AuthContext } from "../App";
@@ -63,11 +67,29 @@ const useStyles = makeStyles()((theme) => ({
 	dialogActions: {
 		padding: theme.spacing(2),
 	},
+	drawer: {
+		"& .MuiDrawer-paper": {
+			width: "400px",
+			boxSizing: "border-box",
+			backgroundColor: "#f0f0f0",
+			[theme.breakpoints.down("sm")]: {
+				width: "100%",
+			},
+		},
+	},
+	drawerHeader: {
+		display: "flex",
+		alignItems: "center",
+		padding: theme.spacing(2, 2),
+		justifyContent: "flex-end",
+	},
 }));
 
 export default function Header() {
 	const { classes } = useStyles();
 	const { state, dispatch } = useContext(AuthContext);
+
+	const [drawerOpen, setDrawerOpen] = useState(false);
 
 	const [searchContent, setSearchContent] = useState("");
 	const [filters, setFilters] = useState(state.filters);
@@ -116,8 +138,79 @@ export default function Header() {
 		});
 	};
 
+	const handleDrawerOpen = () => {
+		setDrawerOpen(true);
+	};
+
 	return (
 		<div className={classes.headerSection}>
+			<AppBar position="absolute" sx={{ backgroundColor: "transparent", boxShadow: "none" }}>
+				<Toolbar>
+					<IconButton
+						color="inherit"
+						aria-label="open drawer"
+						onClick={handleDrawerOpen}
+						edge="start"
+						sx={{ color: "#555" }}
+					>
+						<MenuIcon />
+					</IconButton>
+				</Toolbar>
+			</AppBar>
+			<Drawer anchor="left" open={drawerOpen} onClose={() => setDrawerOpen(false)} className={classes.drawer}>
+				<div className={classes.drawerHeader}>
+					<IconButton onClick={() => setDrawerOpen(false)}>
+						<CloseIcon />
+					</IconButton>
+				</div>
+				{state.user && (
+					<Box
+						sx={{
+							width: "100%",
+							height: "100%",
+							display: "flex",
+							flexDirection: "column",
+							alignItems: "center",
+							justifyContent: "center",
+							backgroundColor: "#f0f0f0",
+							padding: (theme) => theme.spacing(6, 1),
+						}}
+					>
+						<Avatar
+							sx={{
+								width: "200px",
+								height: "200px",
+								marginBottom: "30px",
+							}}
+							src={state.user?.avatar_url}
+							alt={state.user?.login}
+						/>
+						<Typography variant="h5" component="h5">
+							{state.user?.name}
+						</Typography>
+						<Typography variant="caption" component="p">
+							{state.user?.login}
+						</Typography>
+						<Button
+							variant="contained"
+							sx={{
+								marginTop: "30px",
+								color: "#fff",
+								"&:hover": {
+									backgroundColor: "#555",
+								},
+							}}
+							onClick={() => {
+								dispatch({ type: "SETSTATE", payload: { loading: true } });
+								dispatch({ type: "LOGOUT" });
+								setDrawerOpen(false);
+							}}
+						>
+							Sign Out
+						</Button>
+					</Box>
+				)}
+			</Drawer>
 			<Container maxWidth="md">
 				<div className={classes.headerTitle}>
 					<Typography variant="h3" component="h3" sx={{ fontWeight: 600 }}>

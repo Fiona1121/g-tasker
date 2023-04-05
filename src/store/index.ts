@@ -53,7 +53,19 @@ export const reducer = (state: AuthState, action: AuthAction) => {
 		}
 		case AuthActionType.LOGOUT: {
 			localStorage.clear();
-			return initialState;
+			return {
+				...state,
+				loading: false,
+				access_token: null,
+				user: null,
+				repos: [],
+				issues: [],
+				filters: {
+					searchContent: "",
+					status: ["Open", `"In Progress"`, "Done"],
+					sort: "created",
+				},
+			};
 		}
 		default:
 			return state;
